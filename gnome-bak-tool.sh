@@ -1,22 +1,8 @@
 #!/bin/bash
 
 # Global variables
-help=$(cat << EOF
-Usage: $0 [FLAGS] OUTPUT_DIRECTORY
-FLAGS:
-    -a    shorthand to -cefgisw (export anything but disabled extensions' files)
-    -c    export current cursor theme files
-    -e    export enabled extensions' files
-    -d    export disabled extensions' files
-    -f    export current shell theme files and the shell's dconf configuration
-    -g    export current gtk theme files
-    -h    view help
-    -i    export current icon theme files, excluding the files related to the cursor
-    -s    export current sound theme files
-    -v    view program version
-    -w    export current wallpapers and their dconf configuration
-EOF
-)
+user_theme_extension_id="user-theme@gnome-shell-extensions.gcampax.github.com"
+export_user_shell=false
 export_gtk=false
 export_icon=false
 export_cursor=false
@@ -25,19 +11,36 @@ export_enabled_extensions=false
 export_disabled_extensions=false
 export_shell=false
 export_wallpaper=false
+help=$(cat << EOF
+Usage: $0 [FLAGS] OUTPUT_DIRECTORY
+FLAGS:
+    -a    export anything but disabled extensions' files
+    -c    export current cursor theme files
+    -e    export enabled extensions' files
+    -d    export disabled extensions' files
+    -g    export current gtk theme files
+    -h    view help
+    -i    export current icon theme files, excluding the files related to the cursor
+    -s    export current sound theme files
+    -S    export current shell theme files and the shell's dconf configuration. Only works with $user_theme_extension_id extension installed
+    -v    view program version
+    -w    export current wallpapers and their dconf configuration
+Shorthand: to export anything use the -ad flags.
+EOF
+)
 
 # Retrieve flags
-while getopts 'acdefghisvw' OPTION; do
+while getopts 'acdeghisSvw' OPTION; do
     case "$OPTION" in
         a) export_cursor=true; export_enabled_extensions=true; export_shell=true; export_gtk=true; export_icon=true; export_sound=true; export_wallpaper=true ;;
         c) export_cursor=true ;;
         d) export_disabled_extensions=true ;;
         e) export_enabled_extensions=true ;;
-        f) export_shell=true ;;
         g) export_gtk=true ;;
         h) echo "$help"; exit 0 ;;
         i) export_icon=true ;;
         s) export_sound=true ;;
+        S) export_shell=true ;;
         v) echo "$0 v0.0.0"; exit 0 ;;
         w) export_wallpaper=true ;;
         ?) echo "$help"; exit 2 ;;
@@ -45,10 +48,9 @@ while getopts 'acdefghisvw' OPTION; do
 done
 shift "$(($OPTIND - 1))"
 
-shell_file="$*/shell.txt"
-bg_file="$*/bg.txt"
-export_user_shell=false
-user_theme_extension_id="user-theme@gnome-shell-extensions.gcampax.github.com"
+# dconf dump output files
+shell_file="$*/shell.ini"
+bg_file="$*/bg.ini"
 
 # Configure cp command
 shopt -s extglob
@@ -119,7 +121,6 @@ if [ $export_cursor == true ]; then
             basename=$(basename "$user_dir")
             if [ "$basename" == "$cursor_dconf_name" ]; then
                 found=true
-                #cp -r "$user_cursor" "$*/cursor"
                 cp "$user_dir/cursor.theme" "$*/cursor"
                 cp -r "$user_dir/cursors" "$*/cursor"
                 break
@@ -131,7 +132,6 @@ if [ $export_cursor == true ]; then
             basename=$(basename "$dir")
             if [ "$basename" == "$cursor_dconf_name" ]; then
                 found=true
-                #cp -r "$cursor" "$*/cursor"
                 cp "$dir/cursor.theme" "$*/cursor"
                 cp -r "$dir/cursors" "$*/cursor"
                 break
@@ -165,19 +165,24 @@ if [ $export_disabled_extensions == true ]; then
     extensions_list+="$(gnome-extensions list --disabled)"
     extensions_list+=$'\n'
 fi
-#$extensions_list | while IFS= read -r extension; do
+mkdir -p "$*/extensions"
 while IFS= read -r extension; do
-    if [ "${extension[*]}" == $user_theme_extension_id ]; then
-        echo "Extension ${extension[*]} found, current shell theme will be copied if flagged"
-        export_user_shell=true
-    fi
-    if [ -d "$extensions_user_path/${extension[*]}" ]; then
-        cp -r "$extensions_user_path/${extension[*]}" "$*/extensions"
-    elif [ -d "$extensions_path/${extension[*]}" ]; then
-        cp -r "$extensions_path/${extension[*]}" "$*/extensions"
-    else
-        echo "Error: enabled extension ${extension[*]} couldn't be found both in $extensions_user_path and $extensions_path"
-        exit 6
+    if [ -n "${extension[*]}" ]; then  # Because there's normally a \n at the end of the file
+        if [ "${extension[*]}" == $user_theme_extension_id ]; then
+            echo "Extension ${extension[*]} found, current shell theme will be copied if flagged"
+            export_user_shell=true
+        fi
+        if [ -d "$extensions_user_path/${extension[*]}" ]; then
+            cp -r "$extensions_user_path/${extension[*]}" "$*/extensions/${extension[*]}"
+        elif [ -d "$extensions_path/${extension[*]}" ]; then
+            cp -r "$extensions_path/${extension[*]}" "$*/extensions/${extension[*]}"
+        else
+            echo "Error: extension ${extension[*]} couldn't be found both in $extensions_user_path and $extensions_path"
+            exit 6
+        fi
+        extension_dump_name="${extension[*]%%@*}"
+        extension_dump=$(dconf dump /org/gnome/shell/extensions/"$extension_dump_name"/)
+        echo "$extension_dump" > "$*/extensions/$extension_dump_name.ini"
     fi
 done <<< "$extensions_list"
 
@@ -199,8 +204,8 @@ if [ $export_shell == true ]; then
     fi
 
     echo "Copying shell configuration"
-    echo "$(dconf dump /org/gnome/shell/)" > "$shell_file"
-    # TODO: only copy enabled extensions' settings if not flagged by -d
+    shell_dump="$(echo "$(dconf dump /org/gnome/shell/)" | sed '/^$/q')"
+    echo "$shell_dump" > "$shell_file"
 fi
 
 # Wallpaper configuration and wallpapers

@@ -66,7 +66,7 @@ Notice: the script doesn't automatically apply the themes and the extensions, it
 ## Notes
 
 - The user-theme extension (`user-theme@gnome-shell-extensions.gcampax.github.com`) is required for exporting and importing shell themes.
-- When importing, use the `-f` flag to force overwrite existing theme directories. Without this flag, the script will skip copying if a directory already exists.
+- When importing, use the `-f` flag to force overwrite existing theme directories and dconf configurations. Without this flag, the script will skip copying if a directory already exists or a dconf path is not empty.
 - The export script will attempt to find themes in both user and system directories.
 - The import script will place themes in the appropriate user directories.
 

@@ -1,6 +1,6 @@
-# GNOME Backup Tool
+# GNOMEport
 
-GNOME Backup Tool is a set of bash scripts designed to export and import GNOME desktop environment themes and configurations. This tool allows you to easily backup and restore your GNOME customizations, including GTK themes, icon themes, cursor themes, sound themes, shell themes, wallpapers, and extension configurations.
+GNOMEport is a set of bash scripts designed to export and import GNOME desktop environment themes and configurations. This tool allows you to easily backup and restore your GNOME customizations, including GTK themes, icon themes, cursor themes, sound themes, shell themes, wallpapers, and extension configurations.
 
 ## Scripts
 

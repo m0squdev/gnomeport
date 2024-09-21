@@ -21,7 +21,7 @@ FLAGS:
     -a    import anything
     -c    import current cursor theme files
     -e    import extensions' files and dconf configurations
-    -f    forces overwriting the directory of a theme. If not specified, the copying for that theme will be skipped
+    -f    force overwriting the directory of a theme. If not specified, the copying for that theme will be skipped
     -g    import current gtk theme files. You will be able to apply the theme only if $user_theme_extension_id extension is enabled
     -h    view help
     -i    import current icon theme files, excluding the files related to the cursor
@@ -29,13 +29,14 @@ FLAGS:
     -S    import current shell theme files. You will be able to apply the theme only if $user_theme_extension_id extension is enabled
     -v    view program version
     -w    import current wallpapers
+Notice: trying to import inexisting parts of the configuration will result in skipping that part of the import.
 EOF
 )
 
 # Retrieve flags
 while getopts 'acdefghisSvw' OPTION; do
     case "$OPTION" in
-        a) import_cursor=true; import_extensions=true; import_shell=true; import_gtk=true; import_icon=true; import_sound=true; import_wallpaper=true ;;
+        a) import_cursor=true; import_extensions=true; import_shell=true; import_gtk=true; import_icon=true; import_sound=true; import_wallpapers=true ;;
         c) import_cursor=true ;;
         e) import_extensions=true ;;
         f) force_overwrite=true;;
@@ -45,7 +46,7 @@ while getopts 'acdefghisSvw' OPTION; do
         s) import_sound=true ;;
         S) import_shell=true ;;
         v) echo "$0 v0.0.0"; exit 0 ;;
-        w) import_wallpaper=true ;;
+        w) import_wallpapers=true ;;
         ?) echo "$help"; exit 2 ;;
     esac
 done
@@ -58,9 +59,12 @@ shopt -s extglob
 check_and_copy() {
     source_path="$1"
     destination_path="$2"
-    if [ $force_overwrite == false ] && [ -d "$destination_path" ]; then
-        echo "Warning: skipping copying of directory $destination_path as it already exists. Use -f to force overwriting"
+    if [ ! -d "$source_path" ]; then
+        echo "cp: skipping $source_path => $destination_path because source doesn't exist"
+    elif [ $force_overwrite == false ] && [ -d "$destination_path" ]; then
+        echo "cp: skipping $source_path => $destination_path because destination already exists"
     else
+        echo "cp: copying $source_path => $destination_path"
         cp -r "$source_path" "$destination_path"
     fi
 }
@@ -73,11 +77,10 @@ import_dir() {
     source_path=$(find "$parent_source_path" -maxdepth 1 -type d -name "$prefix-*" | head -n 1)
     if [ -n "$source_path" ]; then
         source_basename=$(basename "$source_path")
-        destination_path="$parent_destination_path/${source_basename#"$prefix"-}$prefix"
+        destination_path="$parent_destination_path/$source_basename"
         check_and_copy "$source_path" "$destination_path"
     else
-        echo "Error: source directory doesn't exist"
-        exit 4
+        echo "Warning: skipping copying of $parent_source_path/$prefix-* because source doesn't exist"
     fi
 }
 
@@ -94,62 +97,74 @@ fi
 
 # Gtk theme
 if [ $import_gtk == true ]; then
-    echo "Copying gtk theme. You will be able to apply the theme only if $user_theme_extension_id extension is enabled"
+    echo "=== GTK THEME ==="
     import_dir "$*" "gtk" "$themes_dir"
 fi
 
 # Icon theme
 if [ $import_icon == true ]; then
-    echo "Copying icon theme"
+    echo "=== ICON THEME ==="
     import_dir "$*" "icon" "$icons_dir"
 fi
 
 # Cursor theme
 if [  $import_cursor == true ]; then
-    echo "Copying cursor theme"
+    echo "=== CURSOR THEME ==="
     import_dir "$*" "cursor" "$icons_dir"
 fi
 
 # Sound theme
 if [ $import_sound == true ]; then
-    echo "Copying sound theme"
+    echo "=== SOUND THEME ==="
     import_dir "$*" "sound" "$sounds_dir"
 fi
 
 # Extensions
 if [ $import_extensions == true ]; then
-    echo "Copying extensions"
-    for item_path in "$*/extensions"/*; do
-        item_basename=$(basename "$item_path")
-        if [ -d "$item_path" ]; then
-            check_and_copy "$item_path" "$extensions_dir/$item_basename"
-        else
-            dconf_path="/org/gnome/shell/extensions/${item_basename%.ini}/"
-            if [ $force_overwrite == false ] && [ "$(dconf dump "$dconf_path")" != "\n" ]; then
-                echo "Warning: skipping loading of dconf configuration $dconf_path as it is not empty. Use -f to force overwriting"
+    echo "=== EXTENSIONS ==="
+    if [ -d "$*/extensions" ]; then
+        for item_path in "$*/extensions"/*; do
+            item_basename=$(basename "$item_path")
+            if [ -d "$item_path" ]; then
+                check_and_copy "$item_path" "$extensions_dir/$item_basename"
             else
-                dconf load "$dconf_path" < "$item_path"
+                dconf_path="/org/gnome/shell/extensions/${item_basename%.ini}/"
+                if [ $force_overwrite == false ] && [ "$(dconf dump "$dconf_path")" != "\n" ]; then
+                    echo "dconf load: skipping $item_path => $dconf_path"
+                else
+                    echo "dconf load: loading $item_path => $dconf_path"
+                    dconf load "$dconf_path" < "$item_path"
+                fi
             fi
-        fi
-    done
+        done
+    else
+        echo "Warning: skipping import of extensions because sources don't exist"
+    fi
 fi
 
 # Shell theme
 if [ $import_shell == true ]; then
+    echo "=== SHELL THEME ==="
     import_dir "$*" "shell" "$themes_dir"
 fi
 
 # Wallpapers
 if [ $import_wallpapers == true ]; then
-    for item_path in "$*"/light.* "$*"/dark.*; do
-        if [ -f "$item_path" ]; then
-            item_basename=$(basename "$item_path")
-            destination_path="$wallpapers_dir/$item_basename"
-            if [ $force_overwrite == false ] && [ -f "$destination_path" ]; then
-                echo "Warning: skipping copying of file $destination_path as it already exists. Use -f to force overwriting"
-            else
-                cp "$item_path" "$destination_path"
-            fi            
-        fi
-    done
+    echo "=== WALLPAPERS ==="
+    if ls "$*"/light.* "$*"/dark.* 1> /dev/null 2>&1; then
+        for item_path in "$*"/light.* "$*"/dark.*; do
+            if [ -f "$item_path" ]; then
+                item_basename=$(basename "$item_path")
+                destination_path="$wallpapers_dir/$item_basename"
+                if [ $force_overwrite == false ] && [ -f "$destination_path" ]; then
+                    echo "cp: skipping $item_path => $destination_path/$item_basename because destination already exists"
+                else
+                    echo "cp: copying $item_path => $destination_path/$item_basename"
+                    cp "$item_path" "$destination_path"
+                fi
+            fi
+        done
+    else
+        echo "Warning: skipping import of wallpapers as sources don't exist"
+    fi
 fi

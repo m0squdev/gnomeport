@@ -55,6 +55,8 @@ Flags:
 - `-v`: View program version
 - `-w`: Import wallpapers
 
+Notice: the script doesn't automatically apply the themes and the extensions, it just moves them to the locations where GNOME loads them from! Use tools like `gnome-tweaks` and `gnome-extensions` to do this after you run the script.
+
 ## Requirements
 
 - GNOME desktop environment

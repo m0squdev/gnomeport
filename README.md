@@ -1,78 +1,73 @@
 # GNOME Backup Tool
 
-This shell script allows you to backup various GNOME theme components and settings to a specified directory.
+GNOME Backup Tool is a set of bash scripts designed to export and import GNOME desktop environment themes and configurations. This tool allows you to easily backup and restore your GNOME customizations, including GTK themes, icon themes, cursor themes, sound themes, shell themes, wallpapers, and extension configurations.
 
-## Features
+## Scripts
 
-The script can backup the following GNOME components:
+This repository contains two main scripts:
 
-- GTK theme
-- Icon theme
-- Cursor theme
-- Sound theme
-- Shell theme (requires the User Themes extension)
-- Enabled and disabled GNOME Shell extensions
-- Wallpapers (both light and dark modes)
-- GNOME Shell configuration
+1. `export.sh`: Exports your current GNOME theme and configurations.
+2. `import.sh`: Imports previously exported GNOME theme and configurations.
 
 ## Usage
 
-```
-./gnome-bak-tool.sh [FLAGS] OUTPUT_DIRECTORY
+### Exporting Themes
+
+To export your current GNOME themes and configurations:
+
+```bash
+./export.sh [FLAGS] OUTPUT_DIRECTORY
 ```
 
-### Flags
-
-- `-a`: Backup everything except disabled extensions
-- `-c`: Backup current cursor theme files
-- `-e`: Backup enabled extensions' files
-- `-d`: Backup disabled extensions' files
-- `-g`: Backup current GTK theme files
+Flags:
+- `-a`: Export everything except disabled extensions
+- `-c`: Export current cursor theme files
+- `-d`: Export disabled extensions' files and dconf configurations
+- `-e`: Export enabled extensions' files and dconf configurations
+- `-g`: Export current GTK theme files
 - `-h`: View help
-- `-i`: Backup current icon theme files (excluding cursor-related files)
-- `-s`: Backup current sound theme files
-- `-S`: Backup current shell theme files and shell's dconf configuration (requires User Themes extension)
+- `-i`: Export current icon theme files (excluding cursor files)
+- `-s`: Export current sound theme files
+- `-S`: Export current shell theme files (requires user-theme extension)
 - `-v`: View program version
-- `-w`: Backup current wallpapers and their dconf configuration
+- `-w`: Export current wallpapers and their dconf configuration
 
-Shorthand: To backup everything, use the `-ad` flags.
+To export everything, use: `./export.sh -ad OUTPUT_DIRECTORY`
 
-## Output
+### Importing Themes
 
-The script creates a directory structure in the specified output directory, containing the backed up theme components and configuration files.
+To import previously exported GNOME themes and configurations:
+
+```bash
+./import.sh [FLAGS] INPUT_DIRECTORY
+```
+
+Flags:
+- `-a`: Import everything
+- `-c`: Import cursor theme files
+- `-e`: Import extensions' files and dconf configurations
+- `-f`: Force overwrite existing theme directories
+- `-g`: Import GTK theme files
+- `-h`: View help
+- `-i`: Import icon theme files (excluding cursor files)
+- `-s`: Import sound theme files
+- `-S`: Import shell theme files
+- `-v`: View program version
+- `-w`: Import wallpapers
 
 ## Requirements
 
 - GNOME desktop environment
 - Bash shell
-- User Themes extension (for shell theme backup)
+- `dconf` command-line tool
 
 ## Notes
 
-- The script searches for themes in both user-specific and system-wide directories.
-- If a theme component is not found, the script will display an error message.
-- The User Themes extension (`user-theme@gnome-shell-extensions.gcampax.github.com`) is required to backup the current shell theme.
+- The user-theme extension (`user-theme@gnome-shell-extensions.gcampax.github.com`) is required for exporting and importing shell themes.
+- When importing, use the `-f` flag to force overwrite existing theme directories. Without this flag, the script will skip copying if a directory already exists.
+- The export script will attempt to find themes in both user and system directories.
+- The import script will place themes in the appropriate user directories.
 
-## Examples
+## Disclaimer
 
-Backup everything to a directory named "my_gnome_backup":
-
-```
-./gnome-bak-tool.sh -ad my_gnome_backup
-```
-
-Backup only GTK and icon themes:
-
-```
-./gnome-bak-tool.sh -gi my_gnome_backup
-```
-
-## Troubleshooting
-
-If you encounter any issues, make sure:
-
-1. You have the necessary permissions to read theme files and write to the output directory.
-2. The User Themes extension is installed if you're trying to backup the shell theme.
-3. The themes you're trying to backup exist in either the user or system directories.
-
-For more information, run the script with the `-h` flag to view the help message.
+Always backup your data before using these scripts. While they are designed to be safe, unexpected issues may occur.

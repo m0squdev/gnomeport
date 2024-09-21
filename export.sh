@@ -16,13 +16,13 @@ Usage: $0 [FLAGS] OUTPUT_DIRECTORY
 FLAGS:
     -a    export anything but disabled extensions' files
     -c    export current cursor theme files
-    -e    export enabled extensions' files
-    -d    export disabled extensions' files
+    -d    export disabled extensions' files and dconf configurations
+    -e    export enabled extensions' files and dconf configurations
     -g    export current gtk theme files
     -h    view help
     -i    export current icon theme files, excluding the files related to the cursor
     -s    export current sound theme files
-    -S    export current shell theme files and the shell's dconf configuration. Only works with $user_theme_extension_id extension installed
+    -S    export current shell theme files. Only works with $user_theme_extension_id extension installed
     -v    view program version
     -w    export current wallpapers and their dconf configuration
 Shorthand: to export anything use the -ad flags.
@@ -55,10 +55,16 @@ bg_file="$*/bg.ini"
 # Configure cp command
 shopt -s extglob
 
+#rm_single_quotes <string with single quotes> => string without single quotes
+rm_single_quotes() {
+    local tmp_str=${1#\'}
+    echo "${tmp_str%\'}"
+    return
+}
+
 # find_path <theme name> <user directory> <system directory> => path
 find_path() {
-    local name=${1#\'}
-    name=${name%\'}
+    local name=$1
     local user_dir=$2
     local dir=$3
     local found=""
@@ -83,7 +89,7 @@ find_path() {
 
 # Create output directory
 if [ $# -eq 0 ]; then
-    echo "Error: no directory specified."
+    echo "Error: no directory specified"
     echo "$help"
     exit 5
 else
@@ -93,36 +99,40 @@ fi
 
 # Gtk theme
 if [ $export_gtk == true ]; then
-    echo "Copying current gtk theme"
-    gtk=$(find_path "$(dconf read /org/gnome/desktop/interface/gtk-theme)" "$HOME/.themes" "/usr/share/themes")
-    cp -r "$gtk" "$*/gtk"
+    theme_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/interface/gtk-theme)")"
+    echo "Copying $theme_dconf_name gtk theme"
+    gtk=$(find_path "$theme_dconf_name" "$HOME/.themes" "/usr/share/themes")
+    cp -r "$gtk" "$*/gtk-$theme_dconf_name"
 fi
 
 # Icon theme
 if [ $export_icon == true ]; then
-    echo "Copying current icon theme"
-    icon=$(find_path "$(dconf read /org/gnome/desktop/interface/icon-theme)" "$HOME/.local/share/icons" "/usr/share/icons")
-    mkdir -p "$*/icon"
-    cp -r "$icon"/!(cursor.theme|cursors) "$*/icon/"  # Copies all the files in the icon theme directory except for the cursor.theme file and cursors directory, which are the cursor theme files instead
+    icon_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/interface/icon-theme)")"
+    echo "Copying $icon_dconf_name icon theme"
+    icon=$(find_path "$icon_dconf_name" "$HOME/.local/share/icons" "/usr/share/icons")
+    mkdir -p "$*/icon-$icon_dconf_name"
+    cp -r "$icon"/!(cursor.theme|cursors) "$*/icon-$icon_dconf_name/"  # Copies all the files in the icon theme directory except for the cursor.theme file and cursors directory, which are the cursor theme files instead
 fi
 
 # Cursor theme
 if [ $export_cursor == true ]; then
-    echo "Copying current cursor theme"
-    cursor_dconf_name=$(dconf read /org/gnome/desktop/interface/cursor-theme)
+    cursor_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/interface/cursor-theme)")"
     cursor_dconf_name=${cursor_dconf_name#\'}
     cursor_dconf_name=${cursor_dconf_name%\'}
+    echo "Copying $cursor_dconf_name cursor theme"
     user_dirs=$(find "$HOME/.local/share/icons" -mindepth 1 -maxdepth 1 -type d)
     dirs=$(find "/usr/share/icons" -mindepth 1 -maxdepth 1 -type d)
-    mkdir -p "$*/cursor"
+    mkdir -p "$*/cursor-$cursor_dconf_name"
     found=false
     if [ ${#user_dirs[@]} -gt 0 ]; then
         find "$HOME/.local/share/icons" -mindepth 1 -maxdepth 1 -type d | while IFS= read -r user_dir; do
             basename=$(basename "$user_dir")
             if [ "$basename" == "$cursor_dconf_name" ]; then
                 found=true
-                cp "$user_dir/cursor.theme" "$*/cursor"
-                cp -r "$user_dir/cursors" "$*/cursor"
+                if ! cp "$user_dir/cursor.theme" "$*/cursor-$cursor_dconf_name" 2>/dev/null; then
+                    echo "Warning: $user_dir/cursor.theme file not found"
+                fi
+                cp -r "$user_dir/cursors" "$*/cursor-$cursor_dconf_name"
                 break
             fi
         done
@@ -132,8 +142,10 @@ if [ $export_cursor == true ]; then
             basename=$(basename "$dir")
             if [ "$basename" == "$cursor_dconf_name" ]; then
                 found=true
-                cp "$dir/cursor.theme" "$*/cursor"
-                cp -r "$dir/cursors" "$*/cursor"
+                if ! cp "$dir/cursor.theme" "$*/cursor-$cursor_dconf_name" 2>/dev/null; then
+                    echo "Warning: $dir/cursor.theme file not found"
+                fi
+                cp -r "$dir/cursors" "$*/cursor-$cursor_dconf_name"
                 break
             fi
         done
@@ -144,11 +156,12 @@ if [ $export_cursor == true ]; then
     fi
 fi
 
-# Sounds
+# Sound theme
 if [ $export_sound == true ]; then
-    echo "Copying current sound theme"
-    sound=$(find_path "$(dconf read /org/gnome/desktop/sound/theme-name)" "$HOME/.local/share/sounds" "/usr/share/sounds")
-    cp -r "$sound" "$*/sound"
+    sound_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/sound/theme-name)")"
+    echo "Copying $sound_dconf_name sound theme"
+    sound=$(find_path "$sound_dconf_name" "$HOME/.local/share/sounds" "/usr/share/sounds")
+    cp -r "$sound" "$*/sound-$sound_dconf_name"
 fi
 
 # Extensions
@@ -156,12 +169,12 @@ extensions_user_path="$HOME/.local/share/gnome-shell/extensions"
 extensions_path="/usr/share/gnome-shell/extensions"
 extensions_list=""
 if [ $export_enabled_extensions == true ]; then
-    echo "Copying enabled extensions"
+    echo "Marked enabled extensions as to be copied"
     extensions_list+="$(gnome-extensions list --enabled)"
     extensions_list+=$'\n'
 fi
 if [ $export_disabled_extensions == true ]; then
-    echo "Copying disabled extensions"
+    echo "Marked disabled extensions as to be copied"
     extensions_list+="$(gnome-extensions list --disabled)"
     extensions_list+=$'\n'
 fi
@@ -169,8 +182,10 @@ mkdir -p "$*/extensions"
 while IFS= read -r extension; do
     if [ -n "${extension[*]}" ]; then  # Because there's normally a \n at the end of the file
         if [ "${extension[*]}" == $user_theme_extension_id ]; then
-            echo "Extension ${extension[*]} found, current shell theme will be copied if flagged"
+            echo "Copying extension ${extension[*]}, current shell theme will be copied if flagged"
             export_user_shell=true
+        else
+            echo "Copying extension ${extension[*]}"
         fi
         if [ -d "$extensions_user_path/${extension[*]}" ]; then
             cp -r "$extensions_user_path/${extension[*]}" "$*/extensions/${extension[*]}"
@@ -186,40 +201,46 @@ while IFS= read -r extension; do
     fi
 done <<< "$extensions_list"
 
-# Shell theme and configuration (includes extensions' settings)
+# Shell theme
 if [ $export_shell == true ]; then
     if [ $export_user_shell == true ]; then
-        echo "Copying current shell theme"
-        shell_name=$(dconf read /org/gnome/shell/extensions/user-theme/name)
+        shell_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/shell/extensions/user-theme/name)")"
         shell=""
-        if [ "$shell_name" == "''" ]; then
-            shell="/usr/share/themes/Adwaita"
+        if [ "$shell_dconf_name" == "" ]; then
+            shell_dconf_name="Adwaita"
+            shell="/usr/share/themes/$shell_dconf_name"
             echo "Warning: reading current shell theme name from $user_theme_extension_id resulted in empty string, defaulting to $shell"
         else
-            shell=$(find_path "$shell_name" "$HOME/.themes" "/usr/share/themes")
+            shell=$(find_path "$shell_dconf_name" "$HOME/.themes" "/usr/share/themes")
         fi
-        cp -r "$shell" "$*/shell"
+        echo "Copying $shell_dconf_name shell theme"
+        cp -r "$shell" "$*/shell-$shell_dconf_name"
     else
-        echo "Warning: extension $user_theme_extension_id not found, current shell theme won't be exported"
+        echo "Warning: extension $user_theme_extension_id not found, current shell theme won't be exported (shell dconf configuration will be exported anyway)"
     fi
 
-    echo "Copying shell configuration"
-    shell_dump="$(echo "$(dconf dump /org/gnome/shell/)" | sed '/^$/q')"
-    echo "$shell_dump" > "$shell_file"
+    # The following snippet is to copy the configuration of /org/gnome/shell/ without its subfolders
+    # It works fine but it is useless so I didn't implement it in import.sh
+    # echo "Copying shell configuration"
+    # shell_dump="$(echo "$(dconf dump /org/gnome/shell/)" | sed '/^$/q')"
+    # echo "$shell_dump" > "$shell_file"
 fi
 
-# Wallpaper configuration and wallpapers
+# Wallpapers
 if [ $export_wallpaper == true ]; then
-    echo "Copying wallpaper configuration"
-    echo "$(dconf dump /org/gnome/desktop/background/)" > "$bg_file"
+    # The following snippet is to copy the configuration of /org/gnome/desktop/background
+    # It works fine but it is useless so I didn't implement it in import.sh
+    # echo "Copying wallpaper configuration"
+    # echo "$(dconf dump /org/gnome/desktop/background/)" > "$bg_file"
 
-    echo "Copying current light and dark wallpapers"
     bg_path=$(dconf read /org/gnome/desktop/background/picture-uri)
     bg_path=${bg_path#\'file://}
     bg_path=${bg_path%\'}
+    echo "Copying light wallpaper $bg_path"
+    cp "$bg_path" "$*/light.${bg_path##*.}"
     bg_path_dark=$(dconf read /org/gnome/desktop/background/picture-uri-dark)
     bg_path_dark=${bg_path_dark#\'file://}
     bg_path_dark=${bg_path_dark%\'}
-    cp "$bg_path" "$*/light.${bg_path##*.}"
-    cp "$bg_path_dark" "$*/dark.${bg_path##*.}"
+    echo "Copying dark wallpaper $bg_path_dark"
+    cp "$bg_path_dark" "$*/dark.${bg_path_dark##*.}"
 fi

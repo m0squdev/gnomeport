@@ -47,10 +47,6 @@ while getopts 'acdeghisSvw' OPTION; do
 done
 shift "$(($OPTIND - 1))"
 
-# dconf dump output files
-shell_file="$*/shell.ini"
-bg_file="$*/bg.ini"
-
 # Configure cp command
 shopt -s extglob
 

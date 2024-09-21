@@ -2,7 +2,6 @@
 
 # Global variables
 user_theme_extension_id="user-theme@gnome-shell-extensions.gcampax.github.com"
-export_user_shell=false
 export_gtk=false
 export_icon=false
 export_cursor=false
@@ -82,10 +81,42 @@ find_path() {
         echo "$found"
         return
     else
-        echo "Error: both $user_dir and $dir directories don't exist" 1>&2
+        echo "Error: couldn't find theme $name in both $user_dir and $dir" 1>&2
         exit 3
     fi
 }
+
+# find_theme_path <theme name> => path
+find_theme_path() {
+    local name=$1
+    local user_dir="$HOME/.themes"
+    local user_dir_local="$HOME/.local/share/themes"
+    local dir="/usr/share/themes"
+    local found=""
+    if [ -d "$user_dir" ]; then
+        if [ -d "$user_dir/$name" ]; then
+            found="$user_dir/$name"
+        fi
+    fi
+    if [ -d "$user_dir_local" ]; then
+        if [ -d "$user_dir_local/$name" ]; then
+            found="$user_dir_local/$name"
+        fi
+    fi
+    if [ -d "$dir" ]; then
+        if [ -d "$dir/$name" ]; then
+            found="$dir/$name"
+        fi
+    fi
+    if [ -n "$found" ]; then
+        echo "$found"
+        return
+    else
+        echo "Error: couldn't find theme $name in $user_dir, $user_dir_local and $dir" 1>&2
+        exit 3
+    fi
+}
+
 
 # Create output directory
 if [ $# -eq 0 ]; then
@@ -100,7 +131,7 @@ fi
 if [ $export_gtk == true ]; then
     echo "=== GTK THEME ==="
     theme_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/interface/gtk-theme)")"
-    gtk=$(find_path "$theme_dconf_name" "$HOME/.themes" "/usr/share/themes")
+    gtk=$(find_theme_path "$theme_dconf_name")
     echo "cp: copying $gtk => $*/gtk-$theme_dconf_name"
     cp -r "$gtk" "$*/gtk-$theme_dconf_name"
 fi
@@ -189,10 +220,6 @@ if [ -n "$extensions_list" ]; then
     mkdir -p "$*/extensions"
     while IFS= read -r extension; do
         if [ -n "${extension[*]}" ]; then  # Because there's normally a \n at the end of the file
-            if [ "${extension[*]}" == $user_theme_extension_id ]; then
-                echo "Info: extension ${extension[*]} is being copied, current shell theme will be copied if flagged"
-                export_user_shell=true
-            fi
             if [ -d "$extensions_user_path/${extension[*]}" ]; then
                 echo "cp: copying $extensions_user_path/${extension[*]} => $*/extensions/${extension[*]}"
                 cp -r "$extensions_user_path/${extension[*]}" "$*/extensions/${extension[*]}"
@@ -214,21 +241,17 @@ fi
 # Shell theme
 if [ $export_shell == true ]; then
     echo "=== SHELL THEME ==="
-    if [ $export_user_shell == true ]; then
-        shell_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/shell/extensions/user-theme/name)")"
-        shell=""
-        if [ "$shell_dconf_name" == "" ]; then
-            shell_dconf_name="Adwaita"
-            shell="/usr/share/themes/$shell_dconf_name"
-            echo "Warning: reading current shell theme name from $user_theme_extension_id resulted in empty string, defaulting to $shell"
-        else
-            shell=$(find_path "$shell_dconf_name" "$HOME/.themes" "/usr/share/themes")
-        fi
-        echo "cp: copying $shell => $*/shell-$shell_dconf_name"
-        cp -r "$shell" "$*/shell-$shell_dconf_name"
+    shell_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/shell/extensions/user-theme/name)")"
+    shell=""
+    if [ "$shell_dconf_name" == "" ]; then
+        shell_dconf_name="Adwaita"
+        shell="/usr/share/themes/$shell_dconf_name"
+        echo "Warning: reading current shell theme name from $user_theme_extension_id resulted in empty string, defaulting to $shell"
     else
-        echo "Warning: extension $user_theme_extension_id not found, current shell theme won't be exported"
+        shell=$(find_path "$shell_dconf_name")
     fi
+    echo "cp: copying $shell => $*/shell-$shell_dconf_name"
+    cp -r "$shell" "$*/shell-$shell_dconf_name"
 
     # The following lines are to copy the configuration of /org/gnome/shell/ without its subfolders
     # It works fine but it is useless so I didn't implement it in import.sh

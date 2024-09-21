@@ -2,7 +2,7 @@
 
 # Global variables
 user_theme_extension_id="user-theme@gnome-shell-extensions.gcampax.github.com"
-themes_dir="$HOME/.themes"
+themes_dir="$HOME/.local/share/themes"  # Use $HOME/.themes for legacy applications if you have issues with this directory
 icons_dir="$HOME/.local/share/icons"
 sounds_dir="$HOME/.local/share/sounds"
 extensions_dir="$HOME/.local/share/gnome-shell/extensions"

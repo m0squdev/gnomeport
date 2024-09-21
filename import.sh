@@ -126,7 +126,8 @@ if [ $import_extensions == true ]; then
         for item_path in "$*/extensions"/*; do
             item_basename=$(basename "$item_path")
             if [ -d "$item_path" ]; then
-                check_and_copy "$item_path" "$extensions_dir/$item_basename"
+                echo "1$item_path $extensions_dir"
+                check_and_copy "$item_path" "$extensions_dir"
             else
                 dconf_path="/org/gnome/shell/extensions/${item_basename%.ini}/"
                 if [ $force_overwrite == false ] && [ "$(dconf dump "$dconf_path")" != "\n" ]; then

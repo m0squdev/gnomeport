@@ -133,7 +133,7 @@ if [ $import_extensions == true ]; then
         for item_path in "$*/extensions"/*; do
             item_basename=$(basename "$item_path")
             if [ -d "$item_path" ]; then
-                if [ $force_overwrite == false ] && [ -d "$extensions_dir/$item_basename" ] || [ $force_overwrite == false ] && [ -d "$extensions_dir/$item_basename" ]; then
+                if [ $force_overwrite == false ] && [ -d "/usr/share/gnome-shell/extensions/$item_basename" ] || [ $force_overwrite == false ] && [ -d "$extensions_dir/$item_basename" ]; then
                     echo "cp: skipping $item_path => $extensions_dir because the extension is already installed"
                 else
                     check_and_copy "$item_path" "$extensions_dir/$item_basename"

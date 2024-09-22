@@ -6,17 +6,15 @@ export_gtk=false
 export_icon=false
 export_cursor=false
 export_sound=false
-export_enabled_extensions=false
-export_disabled_extensions=false
+export_extensions=false
 export_shell=false
 export_wallpaper=false
 help=$(cat << EOF
 Usage: $0 [FLAGS] OUTPUT_DIRECTORY
 FLAGS:
-    -a    export anything but disabled extensions' files
+    -a    export anything
     -c    export current cursor theme files
-    -d    export disabled extensions' files and dconf configurations
-    -e    export enabled extensions' files and dconf configurations
+    -e    export extensions' files and dconf configurations
     -g    export current gtk theme files
     -h    view help
     -i    export current icon theme files, excluding the files related to the cursor
@@ -31,10 +29,9 @@ EOF
 # Retrieve flags
 while getopts 'acdeghisSvw' OPTION; do
     case "$OPTION" in
-        a) export_cursor=true; export_enabled_extensions=true; export_shell=true; export_gtk=true; export_icon=true; export_sound=true; export_wallpaper=true ;;
+        a) export_cursor=true; export_extensions=true; export_shell=true; export_gtk=true; export_icon=true; export_sound=true; export_wallpaper=true ;;
         c) export_cursor=true ;;
-        d) export_disabled_extensions=true ;;
-        e) export_enabled_extensions=true ;;
+        e) export_extensions=true ;;
         g) export_gtk=true ;;
         h) echo "$help"; exit 0 ;;
         i) export_icon=true ;;
@@ -202,17 +199,12 @@ fi
 # Extensions
 extensions_user_path="$HOME/.local/share/gnome-shell/extensions"
 extensions_path="/usr/share/gnome-shell/extensions"
+extensions_schemas_path="/usr/share/glib-2.0/schemas"
 extensions_list=""
-if [ $export_enabled_extensions == true ]; then
-    extensions_list+="$(gnome-extensions list --enabled)"
-    extensions_list+=$'\n'
-fi
-if [ $export_disabled_extensions == true ]; then
-    extensions_list+="$(gnome-extensions list --disabled)"
-    extensions_list+=$'\n'
-fi
-if [ -n "$extensions_list" ]; then
+if [ $export_extensions == true ]; then
     echo "=== EXTENSIONS ==="
+    extensions_list+="$(gnome-extensions list)"
+    extensions_list+=$'\n'
     mkdir -p "$*/extensions"
     while IFS= read -r extension; do
         if [ -n "${extension[*]}" ]; then  # Because there's normally a \n at the end of the file
@@ -226,12 +218,12 @@ if [ -n "$extensions_list" ]; then
                 echo "Error: extension ${extension[*]} couldn't be found both in $extensions_user_path and $extensions_path"
                 exit 6
             fi
-            extension_dump_name="${extension[*]%%@*}"
-            echo "dconf dump: dumping /org/gnome/shell/extensions/$extension_dump_name/ => $*/extensions/$extension_dump_name.ini"
-            extension_dump=$(dconf dump /org/gnome/shell/extensions/"$extension_dump_name"/)
-            echo "$extension_dump" > "$*/extensions/$extension_dump_name.ini"
         fi
     done <<< "$extensions_list"
+    echo "dconf dump: dumping /org/gnome/shell/extensions/ => $*/extensions/extensions.ini"
+    dconf dump /org/gnome/shell/extensions/ > "$*/extensions/extensions.ini"
+    echo "cp: copying $extensions_schemas_path/org.gnome.shell.extensions.*.gschema.xml => $*/extensions"
+    cp "$extensions_schemas_path"/org.gnome.shell.extensions.*.gschema.xml "$*/extensions"
 fi
 
 # Shell theme

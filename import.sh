@@ -6,6 +6,7 @@ themes_dir="$HOME/.local/share/themes"  # Use $HOME/.themes for legacy applicati
 icons_dir="$HOME/.local/share/icons"
 sounds_dir="$HOME/.local/share/sounds"
 extensions_dir="$HOME/.local/share/gnome-shell/extensions"
+extensions_schemas_dir="/usr/share/glib-2.0/schemas"
 wallpapers_dir="$HOME/.local/share/backgrounds"
 import_gtk=false
 import_icon=false
@@ -139,12 +140,19 @@ if [ $import_extensions == true ]; then
                     check_and_copy "$item_path" "$extensions_dir/$item_basename"
                 fi
             else
-                dconf_path="/org/gnome/shell/extensions/${item_basename%.ini}/"
-                if [ $force_overwrite == false ] && [ "$(dconf dump "$dconf_path")" != "\n" ]; then
-                    echo "dconf load: skipping $item_path => $dconf_path because dconf dump is not empty"
+                if [[ $item_basename == extensions.ini ]]; then
+                    dconf_path="/org/gnome/shell/extensions/"
+                    if [ $force_overwrite == false ] && [ "$(dconf dump "$dconf_path")" != "\n" ]; then
+                        echo "dconf load: skipping $item_path => $dconf_path because directory is not empty"
+                    else
+                        echo "dconf load: loading $item_path => $dconf_path"
+                        dconf load "$dconf_path" < "$item_path"
+                    fi
+                elif [[ $item_basename == *.gschema.xml ]]; then
+                    echo "sudo cp: copying $item_path => $extensions_schemas_dir"
+                    sudo cp "$item_path" "$extensions_schemas_dir"
                 else
-                    echo "dconf load: loading $item_path => $dconf_path"
-                    dconf load "$dconf_path" < "$item_path"
+                    echo "Warning: skipping unexpected file $item_path"
                 fi
             fi
         done

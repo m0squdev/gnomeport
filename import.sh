@@ -95,6 +95,13 @@ elif [ ! -d "$*" ]; then
     exit 1
 fi
 
+# Create output directories
+mkdir -p "$themes_dir"
+mkdir -p "$icons_dir"
+mkdir -p "$sounds_dir"
+mkdir -p "$extensions_dir"
+mkdir -p "$wallpapers_dir"
+
 # Gtk theme
 if [ $import_gtk == true ]; then
     echo "=== GTK THEME ==="

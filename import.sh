@@ -159,6 +159,7 @@ if [ $import_extensions == true ]; then
     else
         echo "Warning: skipping import of extensions because sources don't exist"
     fi
+    glib-compile-schemas /usr/share/glib-2.0/schemas
 fi
 
 # Shell theme

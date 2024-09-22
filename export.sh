@@ -240,7 +240,7 @@ if [ $export_shell == true ]; then
     shell_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/shell/extensions/user-theme/name)")"
     shell=""
     if [ "$shell_dconf_name" == "" ]; then
-        shell_dconf_name="Adwaita"
+        shell_dconf_name="Default"
         shell="/usr/share/themes/$shell_dconf_name"
         echo "Warning: reading current shell theme name from $user_theme_extension_id resulted in empty string, defaulting to $shell"
     else

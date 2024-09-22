@@ -132,17 +132,13 @@ if [ $import_extensions == true ]; then
     if [ -d "$*/extensions" ]; then
         for item_path in "$*/extensions"/*; do
             item_basename=$(basename "$item_path")
-            if [ -d "$item_path" ]; then
-                if [ $force_overwrite == false ] && [ "$(gnome-extensions list)" == *"$item_basename"* ]; then
-                    echo "cp: skipping $item_path => $extensions_dir because the extension is already installed"
-                else
-                    check_and_copy "$item_path" "$extensions_dir"
-                fi
+            if [ $force_overwrite == false ] && [ -d "$extensions_dir/$item_path" ] [ $force_overwrite == false ] && || [ -d "$extensions_dir/$item_path" ]; then
+                echo "Warning: skipping import of extension $item_basename because it is already installed"
             else
-                dconf_path="/org/gnome/shell/extensions/${item_basename%.ini}/"
-                if [ $force_overwrite == false ] && [ "$(dconf dump "$dconf_path")" != "\n" ]; then
-                    echo "dconf load: skipping $item_path => $dconf_path because dconf dump is not empty"
+                if [ -d "$item_path" ]; then
+                    check_and_copy "$item_path" "$extensions_dir/$item_basename"
                 else
+                    dconf_path="/org/gnome/shell/extensions/${item_basename%.ini}/"
                     echo "dconf load: loading $item_path => $dconf_path"
                     dconf load "$dconf_path" < "$item_path"
                 fi

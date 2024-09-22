@@ -132,7 +132,7 @@ if [ $import_extensions == true ]; then
     if [ -d "$*/extensions" ]; then
         for item_path in "$*/extensions"/*; do
             item_basename=$(basename "$item_path")
-            if [ $force_overwrite == false ] && [ -d "$extensions_dir/$item_path" ] [ $force_overwrite == false ] && || [ -d "$extensions_dir/$item_path" ]; then
+            if [ $force_overwrite == false ] && [ -d "$extensions_dir/$item_path" ] || [ $force_overwrite == false ] && [ -d "$extensions_dir/$item_path" ]; then
                 echo "Warning: skipping import of extension $item_basename because it is already installed"
             else
                 if [ -d "$item_path" ]; then

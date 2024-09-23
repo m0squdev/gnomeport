@@ -56,10 +56,13 @@ shift "$(($OPTIND - 1))"
 # Configure cp command
 shopt -s extglob
 
-# check_and_copy <source path> <destination path (including the name of the new dir)>
+# check_and_copy <source path> <destination path (without the name of the new dir)>
 check_and_copy() {
     source_path="$1"
-    destination_path="$2"
+    destination_dir="$2"
+    source_basename=$(basename "$source_path")
+    source_basename_without_prefix="${source_basename#*-}"
+    destination_path="$destination_dir/$source_basename_without_prefix"
     if [ ! -d "$source_path" ]; then
         echo "cp: skipping $source_path => $destination_path because source doesn't exist"
     elif [ $force_overwrite == false ] && [ -d "$destination_path" ]; then
@@ -75,14 +78,13 @@ import_dir() {
     parent_source_path="$1"
     prefix="$2"
     parent_destination_path="$3"
-    source_path=$(find "$parent_source_path" -maxdepth 1 -type d -name "$prefix-*" | head -n 1)
-    if [ -n "$source_path" ]; then
-        source_basename=$(basename "$source_path")
-        destination_path="$parent_destination_path/$source_basename"
-        check_and_copy "$source_path" "$destination_path"
-    else
-        echo "Warning: skipping copying of $parent_source_path/$prefix-* because source doesn't exist"
-    fi
+    find "$parent_source_path" -maxdepth 1 -type d -name "$prefix-*" | while read -r source_path; do
+        if [ -n "$source_path" ]; then
+            check_and_copy "$source_path" "$parent_destination_path"
+        else
+            echo "Warning: skipping copying of $parent_source_path/$prefix-* because source doesn't exist"
+        fi
+    done
 }
 
 # Retrieve input directory
@@ -137,7 +139,7 @@ if [ $import_extensions == true ]; then
                 if [[ "$force_overwrite" == false && -d "/usr/share/gnome-shell/extensions/$item_basename" ]] || [[ "$force_overwrite" == false && -d "$extensions_dir/$item_basename" ]]; then
                     echo "cp: skipping $item_path => $extensions_dir because the extension is already installed"
                 else
-                    check_and_copy "$item_path" "$extensions_dir/$item_basename"
+                    check_and_copy "$item_path" "$extensions_dir"
                 fi
             else
                 if [[ $item_basename == extensions.ini ]]; then

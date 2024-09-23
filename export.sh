@@ -2,6 +2,12 @@
 
 # Global variables
 user_theme_extension_id="user-theme@gnome-shell-extensions.gcampax.github.com"
+icon_user_dir="$HOME/.local/share/icons"
+icon_dir="/usr/share/icons"
+cursor_user_dir="$icon_user_dir"
+cursor_dir="$icon_dir"
+sound_user_dir="$HOME/.local/share/sounds"
+sound_dir="/usr/share/sounds"
 export_gtk=false
 export_icon=false
 export_cursor=false
@@ -74,7 +80,7 @@ find_path() {
         echo "$found"
         return
     else
-        echo "Error: couldn't find theme $name in both $user_dir and $dir" 1>&2
+        echo "Warning: couldn't find theme $name in both $user_dir and $dir" 1>&2
         exit 3
     fi
 }
@@ -105,8 +111,33 @@ find_theme_path() {
         echo "$found"
         return
     else
-        echo "Error: couldn't find theme $name in $user_dir, $user_dir_local and $dir" 1>&2
-        exit 3
+        echo "Warning: couldn't find theme $name in $user_dir, $user_dir_local and $dir" 1>&2
+    fi
+}
+
+# copy_parents_from_index <theme path> <theme type>
+copy_parents_from_index() {
+    local theme_path="$1"
+    local destination_path="$2"
+    local theme_type="$3"
+    local index_path="$theme_path/index.theme"
+    if [ -f "$index_path" ]; then
+        local parents_line=$(grep -i '^Inherits=' "$index_path" | cut -d '=' -f 2)
+        local parents=$(echo "$parents_line" | cut -d '=' -f 2 | tr -d ' ')
+        IFS=',' read -ra parents_array <<< "$parents"
+        for parent in "${parents_array[@]}"; do
+            if [ "$theme_type" == "gtk" ] || [ "$theme_type" == "shell" ]; then
+                parent_path=$(find_theme_path "$parent")
+            else
+                eval "parent_user_dir=\${${theme_type}_user_dir}"
+                eval "parent_dir=\${${theme_type}_dir}"
+                parent_path=$(find_path "$parent" "$parent_user_dir" "$parent_dir")
+            fi
+            if [ -d "$parent_path" ]; then  # Check if the parent theme exists. Many times it doesn't!
+                echo "cp: copying $parent_path => $destination_path/$theme_type-parent-$parent"
+                cp -r "$parent_path" "$destination_path/$theme_type-parent-$parent"
+            fi
+        done
     fi
 }
 
@@ -127,16 +158,18 @@ if [ $export_gtk == true ]; then
     gtk=$(find_theme_path "$theme_dconf_name")
     echo "cp: copying $gtk => $*/gtk-$theme_dconf_name"
     cp -r "$gtk" "$*/gtk-$theme_dconf_name"
+    copy_parents_from_index "$gtk" "$*" "gtk"
 fi
 
 # Icon theme
 if [ $export_icon == true ]; then
     echo "=== ICON THEME ==="
     icon_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/interface/icon-theme)")"
-    icon=$(find_path "$icon_dconf_name" "$HOME/.local/share/icons" "/usr/share/icons")
-    echo "cp: copying $icon/* except cursor.theme and cursors => $*/icon-$icon_dconf_name"
+    icon=$(find_path "$icon_dconf_name" "$icon_user_dir" "$icon_dir")
+    echo "cp: copying $icon => $*/icon-$icon_dconf_name"
     mkdir -p "$*/icon-$icon_dconf_name"
-    cp -r "$icon"/!(cursor.theme|cursors) "$*/icon-$icon_dconf_name/"  # Copies all the files in the icon theme directory except for the cursor.theme file and cursors directory, which are the cursor theme files instead
+    cp -r "$icon" "$*/icon-$icon_dconf_name/"
+    copy_parents_from_index "$icon" "$*" "icon"
 fi
 
 # Cursor theme
@@ -145,55 +178,20 @@ if [ $export_cursor == true ]; then
     cursor_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/interface/cursor-theme)")"
     cursor_dconf_name=${cursor_dconf_name#\'}
     cursor_dconf_name=${cursor_dconf_name%\'}
-    user_dirs=$(find "$HOME/.local/share/icons" -mindepth 1 -maxdepth 1 -type d)
-    dirs=$(find "/usr/share/icons" -mindepth 1 -maxdepth 1 -type d)
-    mkdir -p "$*/cursor-$cursor_dconf_name"
-    found=false
-    if [ ${#user_dirs[@]} -gt 0 ]; then
-        find "$HOME/.local/share/icons" -mindepth 1 -maxdepth 1 -type d | while IFS= read -r user_dir; do
-            basename=$(basename "$user_dir")
-            if [ "$basename" == "$cursor_dconf_name" ]; then
-                found=true
-                if cp "$user_dir/cursor.theme" "$*/cursor-$cursor_dconf_name" 2>/dev/null; then
-                    echo "cp: copying $user_dir/cursor.theme => $*/cursor-$cursor_dconf_name"
-                else
-                    echo "Warning: couldn't copy $user_dir/cursor.theme (don't panic: not all cursor themes have this file)"
-                fi
-                echo "cp: copying $user_dir/cursors => $*/cursor-$cursor_dconf_name"
-                cp -r "$user_dir/cursors" "$*/cursor-$cursor_dconf_name"
-                break
-            fi
-        done
-    fi
-    if [ ${#dirs[@]} -gt 0 ]; then
-        find "/usr/share/icons" -mindepth 1 -maxdepth 1 -type d | while IFS= read -r dir; do
-            basename=$(basename "$dir")
-            if [ "$basename" == "$cursor_dconf_name" ]; then
-                found=true
-                if cp "$dir/cursor.theme" "$*/cursor-$cursor_dconf_name" 2>/dev/null; then
-                    echo "cp: copying $dir/cursor.theme => $*/cursor-$cursor_dconf_name"
-                else
-                    echo "Warning: couldn't copy $dir/cursor.theme (don't panic: not all cursor themes have this file)"
-                fi
-                echo "cp: copying $dir/cursors => $*/cursor-$cursor_dconf_name"
-                cp -r "$dir/cursors" "$*/cursor-$cursor_dconf_name"
-                break
-            fi
-        done
-    fi
-    if [ ! $found ]; then
-        echo "Error: the currently set cursor theme ($cursor_dconf_name) couldn't be found"
-        exit 4
-    fi
+    cursor=$(find_path "$cursor_dconf_name" "$icon_user_dir" "$icon_dir")
+    echo "cp: copying $cursor => $*/cursor-$cursor_dconf_name"
+    cp -r "$cursor" "$*/cursor-$cursor_dconf_name"
+    copy_parents_from_index "$cursor" "$*" "cursor"
 fi
 
 # Sound theme
 if [ $export_sound == true ]; then
     echo "=== SOUND THEME ==="
     sound_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/sound/theme-name)")"
-    sound=$(find_path "$sound_dconf_name" "$HOME/.local/share/sounds" "/usr/share/sounds")
+    sound=$(find_path "$sound_dconf_name" "$sound_user_dir" "$sound_dir")
     echo "cp: copying $sound => $*/sound-$sound_dconf_name"
     cp -r "$sound" "$*/sound-$sound_dconf_name"
+    copy_parents_from_index "$sound" "$*" "sound"
 fi
 
 # Extensions
@@ -240,6 +238,7 @@ if [ $export_shell == true ]; then
     fi
     echo "cp: copying $shell => $*/shell-$shell_dconf_name"
     cp -r "$shell" "$*/shell-$shell_dconf_name"
+    copy_parents_from_index "$shell" "$*" "shell"
 
     # The following lines are to copy the configuration of /org/gnome/shell/ without its subfolders
     # It works fine but it is useless so I didn't implement it in import.sh

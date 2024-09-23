@@ -134,8 +134,9 @@ copy_parents_from_index() {
                 parent_path=$(find_path "$parent" "$parent_user_dir" "$parent_dir")
             fi
             if [ -d "$parent_path" ]; then  # Check if the parent theme exists. Many times it doesn't!
-                echo "cp: copying $parent_path => $destination_path/$theme_type-parent-$parent"
-                cp -r "$parent_path" "$destination_path/$theme_type-parent-$parent"
+                destination_full_path="$destination_path/${theme_type}parent-$parent"
+                echo "cp: copying $parent_path => $destination_full_path"
+                cp -r "$parent_path" "$destination_full_path"
             fi
         done
     fi
@@ -167,7 +168,6 @@ if [ $export_icon == true ]; then
     icon_dconf_name="$(rm_single_quotes "$(dconf read /org/gnome/desktop/interface/icon-theme)")"
     icon=$(find_path "$icon_dconf_name" "$icon_user_dir" "$icon_dir")
     echo "cp: copying $icon => $*/icon-$icon_dconf_name"
-    mkdir -p "$*/icon-$icon_dconf_name"
     cp -r "$icon" "$*/icon-$icon_dconf_name/"
     copy_parents_from_index "$icon" "$*" "icon"
 fi

@@ -78,6 +78,13 @@ import_dir() {
     parent_source_path="$1"
     prefix="$2"
     parent_destination_path="$3"
+    find "$parent_source_path" -maxdepth 1 -type d -name "${prefix}parent-*" | while read -r source_path; do
+        if [ -n "$source_path" ]; then
+            check_and_copy "$source_path" "$parent_destination_path"
+        else
+            echo "Warning: skipping copying of $parent_source_path/$prefix-* because source doesn't exist"
+        fi
+    done
     find "$parent_source_path" -maxdepth 1 -type d -name "$prefix-*" | while read -r source_path; do
         if [ -n "$source_path" ]; then
             check_and_copy "$source_path" "$parent_destination_path"

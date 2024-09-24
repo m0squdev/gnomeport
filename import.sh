@@ -6,7 +6,7 @@ themes_dir="$HOME/.local/share/themes"  # Use $HOME/.themes for legacy applicati
 icons_dir="$HOME/.local/share/icons"
 sounds_dir="$HOME/.local/share/sounds"
 extensions_dir="$HOME/.local/share/gnome-shell/extensions"
-extensions_schemas_dir="/usr/share/glib-2.0/schemas"
+extensions_schemas_dir="$HOME/.local/share/glib-2.0/schemas/"
 wallpapers_dir="$HOME/.local/share/backgrounds"
 import_gtk=false
 import_icon=false
@@ -186,9 +186,9 @@ if [ $import_wallpapers == true ]; then
                 item_basename=$(basename "$item_path")
                 destination_path="$wallpapers_dir/$item_basename"
                 if [ $force_overwrite == false ] && [ -f "$destination_path" ]; then
-                    echo "cp: skipping $item_path => $destination_path/$item_basename because destination already exists"
+                    echo "cp: skipping $item_path => $wallpapers_dir because destination already exists"
                 else
-                    echo "cp: copying $item_path => $destination_path/$item_basename"
+                    echo "cp: copying $item_path => $wallpapers_dir"
                     cp "$item_path" "$destination_path"
                 fi
             fi

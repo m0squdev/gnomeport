@@ -135,8 +135,13 @@ copy_parents_from_index() {
             fi
             if [ -d "$parent_path" ]; then  # Check if the parent theme exists. Many times it doesn't!
                 destination_full_path="$destination_path/${theme_type}parent-$parent"
-                echo "cp: copying $parent_path => $destination_full_path"
-                cp -r "$parent_path" "$destination_full_path"
+                if [ -d "$destination_full_path" ]; then
+                    echo "cp: skipping $parent_path => $destination_full_path because destination already exists"
+                else
+                    echo "cp: copying $parent_path => $destination_full_path"
+                    cp -r "$parent_path" "$destination_full_path"
+                    copy_parents_from_index "$parent_path" "$destination_path" "$theme_type"
+                fi
             fi
         done
     fi

@@ -106,36 +106,31 @@ elif [ ! -d "$*" ]; then
     exit 1
 fi
 
-# Create output directories
-mkdir -p "$themes_dir"
-mkdir -p "$icons_dir"
-mkdir -p "$sounds_dir"
-mkdir -p "$extensions_dir"
-mkdir -p "$glib_dir"
-mkdir -p "$schemas_dir"
-mkdir -p "$wallpapers_dir"
-
 # Gtk theme
 if [ $import_gtk == true ]; then
     echo "=== GTK THEME ==="
+    mkdir -p "$themes_dir"
     import_dir "$*" "gtk" "$themes_dir"
 fi
 
 # Icon theme
 if [ $import_icon == true ]; then
     echo "=== ICON THEME ==="
+    mkdir -p "$icons_dir"
     import_dir "$*" "icon" "$icons_dir"
 fi
 
 # Cursor theme
 if [  $import_cursor == true ]; then
     echo "=== CURSOR THEME ==="
+    mkdir -p "$icons_dir"
     import_dir "$*" "cursor" "$icons_dir"
 fi
 
 # Sound theme
 if [ $import_sound == true ]; then
     echo "=== SOUND THEME ==="
+    mkdir -p "$sounds_dir"
     import_dir "$*" "sound" "$sounds_dir"
 fi
 
@@ -143,6 +138,9 @@ fi
 if [ $import_extensions == true ]; then
     echo "=== EXTENSIONS ==="
     if [ -d "$*/extensions" ]; then
+        mkdir -p "$extensions_dir"
+        mkdir -p "$glib_dir"
+        mkdir -p "$schemas_dir"
         for item_path in "$*/extensions"/*; do
             item_basename=$(basename "$item_path")
             if [ -d "$item_path" ]; then
@@ -168,15 +166,16 @@ if [ $import_extensions == true ]; then
                 fi
             fi
         done
+        glib-compile-schemas "$schemas_dir"
     else
         echo "Warning: skipping import of extensions because sources don't exist"
     fi
-    glib-compile-schemas "$schemas_dir"
 fi
 
 # Shell theme
 if [ $import_shell == true ]; then
     echo "=== SHELL THEME ==="
+    mkdir -p "$themes_dir"
     import_dir "$*" "shell" "$themes_dir"
 fi
 
@@ -184,6 +183,7 @@ fi
 if [ $import_wallpapers == true ]; then
     echo "=== WALLPAPERS ==="
     if ls "$*"/light.* "$*"/dark.* 1> /dev/null 2>&1; then
+        mkdir -p "$wallpapers_dir"
         for item_path in "$*"/light.* "$*"/dark.*; do
             if [ -f "$item_path" ]; then
                 item_basename=$(basename "$item_path")

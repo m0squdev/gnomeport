@@ -6,10 +6,9 @@ themes_dir="$HOME/.local/share/themes"  # Use $HOME/.themes for legacy applicati
 icons_dir="$HOME/.local/share/icons"
 sounds_dir="$HOME/.local/share/sounds"
 extensions_dir="$HOME/.local/share/gnome-shell/extensions"
-extensions_schemas_dir="$HOME/.local/share/glib-2.0/schemas/"
-wallpapers_dir="$HOME/.local/share/backgrounds"
 glib_dir="$HOME/.local/share/glib-2.0"
 schemas_dir="$glib_dir/schemas"
+wallpapers_dir="$HOME/.local/share/backgrounds"
 import_gtk=false
 import_icon=false
 import_cursor=false
@@ -112,9 +111,9 @@ mkdir -p "$themes_dir"
 mkdir -p "$icons_dir"
 mkdir -p "$sounds_dir"
 mkdir -p "$extensions_dir"
-mkdir -p "$wallpapers_dir"
 mkdir -p "$glib_dir"
 mkdir -p "$schemas_dir"
+mkdir -p "$wallpapers_dir"
 
 # Gtk theme
 if [ $import_gtk == true ]; then
@@ -162,8 +161,8 @@ if [ $import_extensions == true ]; then
                         dconf load "$dconf_path" < "$item_path"
                     fi
                 elif [[ $item_basename == *.gschema.xml ]]; then
-                    echo "sudo cp: copying $item_path => $extensions_schemas_dir"
-                    sudo cp "$item_path" "$extensions_schemas_dir"
+                    echo "sudo cp: copying $item_path => $schemas_dir"
+                    cp "$item_path" "$schemas_dir"
                 else
                     echo "Warning: skipping unexpected file $item_path"
                 fi

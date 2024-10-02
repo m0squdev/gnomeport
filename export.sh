@@ -239,7 +239,7 @@ if [ $export_shell == true ]; then
         shell="/usr/share/themes/$shell_dconf_name"
         echo "Warning: reading current shell theme name from $user_theme_extension_id resulted in empty string, defaulting to $shell"
     else
-        shell=$(find_path "$shell_dconf_name")
+        shell=$(find_theme_path "$shell_dconf_name")
     fi
     echo "cp: copying $shell => $*/shell-$shell_dconf_name"
     cp -r "$shell" "$*/shell-$shell_dconf_name"

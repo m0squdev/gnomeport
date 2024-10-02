@@ -161,7 +161,7 @@ if [ $import_extensions == true ]; then
                         dconf load "$dconf_path" < "$item_path"
                     fi
                 elif [[ $item_basename == *.gschema.xml ]]; then
-                    echo "sudo cp: copying $item_path => $schemas_dir"
+                    echo "cp: copying $item_path => $schemas_dir"
                     cp "$item_path" "$schemas_dir"
                 else
                     echo "Warning: skipping unexpected file $item_path"

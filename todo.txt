@@ -1,0 +1,14 @@
+TO DO
+accent colors (might need to check if gnome 47)
+be careful to symlinks
+copy parent themes (index.theme): copy recursively
+copy parent themes (css)
+	shell: gnome-shell/gnome-shell.css,
+	gtk: gtk-*/gtk.css
+import.sh: copy with -i (if there is already a file asks to replace or not existing file)
+
+IN PROGRESS
+
+DID
+copy parent themes from index.theme
+~/.local/share/themes

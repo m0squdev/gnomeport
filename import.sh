@@ -8,6 +8,8 @@ sounds_dir="$HOME/.local/share/sounds"
 extensions_dir="$HOME/.local/share/gnome-shell/extensions"
 extensions_schemas_dir="$HOME/.local/share/glib-2.0/schemas/"
 wallpapers_dir="$HOME/.local/share/backgrounds"
+glib_dir="$HOME/.local/share/glib-2.0"
+schemas_dir="$glib_dir/schemas"
 import_gtk=false
 import_icon=false
 import_cursor=false
@@ -111,6 +113,8 @@ mkdir -p "$icons_dir"
 mkdir -p "$sounds_dir"
 mkdir -p "$extensions_dir"
 mkdir -p "$wallpapers_dir"
+mkdir -p "$glib_dir"
+mkdir -p "$schemas_dir"
 
 # Gtk theme
 if [ $import_gtk == true ]; then
@@ -168,7 +172,7 @@ if [ $import_extensions == true ]; then
     else
         echo "Warning: skipping import of extensions because sources don't exist"
     fi
-    glib-compile-schemas /usr/share/glib-2.0/schemas
+    glib-compile-schemas "$schemas_dir"
 fi
 
 # Shell theme

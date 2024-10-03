@@ -1,5 +1,8 @@
 TO DO
-accent colors (might need to check if gnome 47)
+gnome settings:
+	accent colors (might need to check if gnome 47)
+	dark or light style
+	keyboard shortcuts
 be careful to symlinks
 copy parent themes (css)
 	shell: gnome-shell/gnome-shell.css,

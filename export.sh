@@ -15,6 +15,7 @@ export_sound=false
 export_extensions=false
 export_shell=false
 export_wallpaper=false
+export_shortcuts=false
 help=$(cat << EOF
 Usage: $0 [FLAGS] OUTPUT_DIRECTORY
 FLAGS:
@@ -23,7 +24,8 @@ FLAGS:
     -e    export extensions' files and dconf configurations
     -g    export current gtk theme files
     -h    view help
-    -i    export current icon theme files, excluding the files related to the cursor
+    -i    export current icon theme files. This exports the whole theme, including eventual files related to the cursor
+    -k    export current keyboard shortcuts from dconf. Looks inside desktop, mutter, settings-daemon and shell configurations
     -s    export current sound theme files
     -S    export current shell theme files. Only works with $user_theme_extension_id extension installed
     -v    view program version
@@ -33,14 +35,15 @@ EOF
 )
 
 # Retrieve flags
-while getopts 'acdeghisSvw' OPTION; do
+while getopts 'acdeghiksSvw' OPTION; do
     case "$OPTION" in
-        a) export_cursor=true; export_extensions=true; export_shell=true; export_gtk=true; export_icon=true; export_sound=true; export_wallpaper=true ;;
+        a) export_cursor=true; export_extensions=true; export_gtk=true; export_icon=true; export_shortcuts=true; export_sound=true; export_shell=true; export_wallpaper=true ;;
         c) export_cursor=true ;;
         e) export_extensions=true ;;
         g) export_gtk=true ;;
         h) echo "$help"; exit 0 ;;
         i) export_icon=true ;;
+        k) export_shortcuts=true ;;
         s) export_sound=true ;;
         S) export_shell=true ;;
         v) echo "$0 v0.0.0"; exit 0 ;;
@@ -269,4 +272,19 @@ if [ $export_wallpaper == true ]; then
     bg_path_dark=${bg_path_dark%\'}
     echo "cp: copying $bg_path_dark => $*/dark.${bg_path_dark##*.}"
     cp "$bg_path_dark" "$*/dark.${bg_path_dark##*.}"
+fi
+
+# Shortcuts
+if [ $export_shortcuts == true ]; then
+    echo "=== KEYBOARD SHORTCUTS ==="
+    echo "dconf dump: dumping /org/gnome/desktop/wm/keybindings/ => $*/shortcuts/desktop.ini"
+    dconf dump /org/gnome/desktop/wm/keybindings/ > "$*/shortcuts/desktop.ini"
+    echo "dconf dump: dumping /org/gnome/mutter/keybindings/ => $*/shortcuts/mutter.ini"
+    dconf dump /org/gnome/mutter/keybindings/ > "$*/shortcuts/mutter.ini"
+    echo "dconf dump: dumping /org/gnome/mutter/wayland/keybindings/ => $*/shortcuts/mutter-wayland.ini"
+    dconf dump /org/gnome/mutter/wayland/keybindings/ > "$*/shortcuts/mutter-wayland.ini"
+    echo "dconf dump: dumping /org/gnome/settings-daemon/plugins/media-keys/ => $*/shortcuts/settings-daemon.ini"
+    dconf dump /org/gnome/settings-daemon/plugins/media-keys/ > "$*/shortcuts/settings-daemon.ini"
+    echo "dconf dump: dumping /org/gnome/shell/keybindings/ => $*/shortcuts/shell.ini"
+    dconf dump /org/gnome/shell/keybindings/ > "$*/shortcuts/shell.ini"
 fi

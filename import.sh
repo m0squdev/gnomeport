@@ -16,6 +16,7 @@ import_sound=false
 import_extensions=false
 import_shell=false
 import_wallpapers=false
+import_shortcuts=false
 force_overwrite=false
 help=$(cat << EOF
 Usage: $0 [FLAGS] INPUT_DIRECTORY
@@ -23,10 +24,11 @@ FLAGS:
     -a    import anything
     -c    import current cursor theme files
     -e    import extensions' files and dconf configurations
-    -f    force overwriting the directory of a theme. If not specified, the copying for that theme will be skipped
-    -g    import current gtk theme files. You will be able to apply the theme only if $user_theme_extension_id extension is enabled
+    -f    force overwriting existing directories and extensions' dconf configurations. If not specified and a directory already exists, the copying will be skipped. Doesn't apply to keyboard shortcuts because the dconf paths to edit aren't empty by default
+    -g    import current gtk theme files
     -h    view help
     -i    import current icon theme files, excluding the files related to the cursor
+    -k    import current keyboard shortcuts to dconf. Edits will be applied to desktop, mutter, settings-daemon and shell configurations
     -s    import current sound theme files
     -S    import current shell theme files. You will be able to apply the theme only if $user_theme_extension_id extension is enabled
     -v    view program version
@@ -36,15 +38,16 @@ EOF
 )
 
 # Retrieve flags
-while getopts 'acdefghisSvw' OPTION; do
+while getopts 'acdefghiksSvw' OPTION; do
     case "$OPTION" in
-        a) import_cursor=true; import_extensions=true; import_shell=true; import_gtk=true; import_icon=true; import_sound=true; import_wallpapers=true ;;
+        a) import_cursor=true; import_extensions=true; import_gtk=true; import_icon=true; import_shortcuts=true; import_sound=true; import_shell=true; import_wallpapers=true ;;
         c) import_cursor=true ;;
         e) import_extensions=true ;;
         f) force_overwrite=true;;
         g) import_gtk=true ;;
         h) echo "$help"; exit 0 ;;
         i) import_icon=true ;;
+        k) import_shortcuts=true ;;
         s) import_sound=true ;;
         S) import_shell=true ;;
         v) echo "$0 v0.0.0"; exit 0 ;;
@@ -198,5 +201,34 @@ if [ $import_wallpapers == true ]; then
         done
     else
         echo "Warning: skipping import of wallpapers as sources don't exist"
+    fi
+fi
+
+# Shortcuts
+if [ $import_shortcuts == true ]; then
+    echo "=== KEYBOARD SHORTCUTS ==="
+    if [ -d "$*/extensions" ]; then
+        for item_path in "$*/extensions"/*; do
+            item_basename=$(basename "$item_path")
+            if [ -f "$item_path" ]; then
+                dconf_path=""
+                case "$item_basename" in
+                    desktop.ini) dconf_path="/org/gnome/desktop/wm/keybindings/" ;;
+                    mutter.ini) dconf_path="/org/gnome/mutter/keybindings/" ;;
+                    mutter-wayland.ini) dconf_path="/org/gnome/mutter/wayland/keybindings/" ;;
+                    settings-daemon.ini) dconf_path="/org/gnome/settings-daemon/plugins/media-keys/" ;;
+                    shell.ini) dconf_path="/org/gnome/shell/keybindings/" ;;
+                    *) echo "Warning: skipping import of unexpected file $item_path" ;;
+                esac
+                if [ -n "$dconf_path" ]; then
+                    echo "dconf load: loading $item_path => $dconf_path"
+                    dconf load "$dconf_path" < "$item_path"
+                fi
+            else
+                echo "Warning: skipping import of unexpected directory $item_path"
+            fi
+        done
+    else
+        echo "Warning: skipping import of keyboard shortcuts because sources don't exist"
     fi
 fi

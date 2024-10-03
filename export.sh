@@ -277,6 +277,7 @@ fi
 # Shortcuts
 if [ $export_shortcuts == true ]; then
     echo "=== KEYBOARD SHORTCUTS ==="
+    mkdir -p "$*/shortcuts"
     echo "dconf dump: dumping /org/gnome/desktop/wm/keybindings/ => $*/shortcuts/desktop.ini"
     dconf dump /org/gnome/desktop/wm/keybindings/ > "$*/shortcuts/desktop.ini"
     echo "dconf dump: dumping /org/gnome/mutter/keybindings/ => $*/shortcuts/mutter.ini"

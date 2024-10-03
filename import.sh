@@ -208,7 +208,7 @@ fi
 if [ $import_shortcuts == true ]; then
     echo "=== KEYBOARD SHORTCUTS ==="
     if [ -d "$*/extensions" ]; then
-        for item_path in "$*/extensions"/*; do
+        for item_path in "$*/shortcuts"/*; do
             item_basename=$(basename "$item_path")
             if [ -f "$item_path" ]; then
                 dconf_path=""

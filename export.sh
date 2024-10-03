@@ -16,13 +16,17 @@ export_extensions=false
 export_shell=false
 export_wallpaper=false
 export_shortcuts=false
+export_accent_color=false
+export_color_scheme=false
 help=$(cat << EOF
 Usage: $0 [FLAGS] OUTPUT_DIRECTORY
 FLAGS:
     -a    export anything
+    -A    export accent color (GNOME 47+)
     -c    export current cursor theme files
+    -C    export color scheme
     -e    export extensions' files and dconf configurations
-    -g    export current gtk theme files
+    -g    export current GTK theme files
     -h    view help
     -i    export current icon theme files. This exports the whole theme, including eventual files related to the cursor
     -k    export current keyboard shortcuts from dconf. Looks inside desktop, mutter, settings-daemon and shell configurations
@@ -35,10 +39,12 @@ EOF
 )
 
 # Retrieve flags
-while getopts 'acdeghiksSvw' OPTION; do
+while getopts 'aAcCdeghiksSvw' OPTION; do
     case "$OPTION" in
-        a) export_cursor=true; export_extensions=true; export_gtk=true; export_icon=true; export_shortcuts=true; export_sound=true; export_shell=true; export_wallpaper=true ;;
+        a) export_accent_color=true; export_cursor=true; export_color_scheme=true; export_extensions=true; export_gtk=true; export_icon=true; export_shortcuts=true; export_sound=true; export_shell=true; export_wallpaper=true ;;
+        A) export_accent_color=true ;;
         c) export_cursor=true ;;
+        C) export_color_scheme=true ;;
         e) export_extensions=true ;;
         g) export_gtk=true ;;
         h) echo "$help"; exit 0 ;;
@@ -288,4 +294,23 @@ if [ $export_shortcuts == true ]; then
     dconf dump /org/gnome/settings-daemon/plugins/media-keys/ > "$*/shortcuts/settings-daemon.ini"
     echo "dconf dump: dumping /org/gnome/shell/keybindings/ => $*/shortcuts/shell.ini"
     dconf dump /org/gnome/shell/keybindings/ > "$*/shortcuts/shell.ini"
+fi
+
+# Accent color
+if [ $export_accent_color == true ]; then
+    echo "=== ACCENT COLOR ==="
+    echo "dconf read: reading /org/gnome/desktop/interface/accent-color => $*/accent-color.txt"
+    accent_color=$(dconf read /org/gnome/desktop/interface/accent-color)
+    if [ -n "$accent_color" ]; then
+        echo "$accent_color" > "$*/accent-color.txt"
+    else
+        echo "Warning: reading accent-color from dconf failed, skipping. Are you running GNOME 47+?"
+    fi
+fi
+
+# Color scheme
+if [ $export_color_scheme == true ]; then
+    echo "=== COLOR SCHEME ==="
+    echo "dconf read: reading /org/gnome/desktop/interface/color-scheme => $*/color-scheme.txt"
+    dconf read /org/gnome/desktop/interface/color-scheme > "$*/color-scheme.txt"
 fi

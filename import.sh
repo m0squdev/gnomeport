@@ -17,15 +17,19 @@ import_extensions=false
 import_shell=false
 import_wallpapers=false
 import_shortcuts=false
+import_accent_color=false
+import_color_scheme=false
 force_overwrite=false
 help=$(cat << EOF
 Usage: $0 [FLAGS] INPUT_DIRECTORY
 FLAGS:
     -a    import anything
+    -A    import accent color (the effect will be visible only on GNOME 47+)
     -c    import current cursor theme files
+    -C    export color scheme
     -e    import extensions' files and dconf configurations
     -f    force overwriting existing directories and extensions' dconf configurations. If not specified and a directory already exists, the copying will be skipped. Doesn't apply to keyboard shortcuts because the dconf paths to edit aren't empty by default
-    -g    import current gtk theme files
+    -g    import current GTK theme files
     -h    view help
     -i    import current icon theme files, excluding the files related to the cursor
     -k    import current keyboard shortcuts to dconf. Edits will be applied to desktop, mutter, settings-daemon and shell configurations
@@ -38,10 +42,12 @@ EOF
 )
 
 # Retrieve flags
-while getopts 'acdefghiksSvw' OPTION; do
+while getopts 'aAcCdefghiksSvw' OPTION; do
     case "$OPTION" in
-        a) import_cursor=true; import_extensions=true; import_gtk=true; import_icon=true; import_shortcuts=true; import_sound=true; import_shell=true; import_wallpapers=true ;;
+        a) import_accent_color=true; import_cursor=true; import_color_scheme=true; import_extensions=true; import_gtk=true; import_icon=true; import_shortcuts=true; import_sound=true; import_shell=true; import_wallpapers=true ;;
+        A) import_accent_color=true ;;
         c) import_cursor=true ;;
+        C) import_color_scheme=true ;;
         e) import_extensions=true ;;
         f) force_overwrite=true;;
         g) import_gtk=true ;;
@@ -231,4 +237,30 @@ if [ $import_shortcuts == true ]; then
     else
         echo "Warning: skipping import of keyboard shortcuts because sources don't exist"
     fi
+fi
+
+# Accent color
+if [ $import_accent_color == true ];then
+    echo "=== ACCENT COLOR ==="
+    echo "dconf write: $*/accent-color.txt => /org/gnome/desktop/interface/accent-color"
+    while IFS= read -r accent_color; do
+        if [ -n "${accent_color[*]}" ]; then
+            dconf write /org/gnome/desktop/interface/accent-color "${accent_color[*]}"
+        else
+            echo "Warning: skipping dconf write of accent-color because an error occurred while reading source file content"
+        fi
+    done < "$*/accent-color.txt"
+fi
+
+# Color scheme
+if [ $import_color_scheme == true ];then
+    echo "=== COLOR SCHEME ==="
+    echo "dconf write: $*/color-scheme.txt => /org/gnome/desktop/interface/color-scheme"
+    while IFS= read -r color_scheme; do
+        if [ -n "${color_scheme[*]}" ]; then
+            dconf write /org/gnome/desktop/interface/color-scheme "${color_scheme[*]}"
+        else
+            echo "Warning: skipping dconf write of color-scheme because an error occurred while reading source file content"
+        fi
+    done < "$*/color-scheme.txt"
 fi

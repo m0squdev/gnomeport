@@ -1,16 +1,17 @@
 TO DO
-gnome settings:
-	accent colors (might need to check if gnome 47)
-	dark or light style
-	keyboard shortcuts
 be careful to symlinks
 copy parent themes (css)
 	shell: gnome-shell/gnome-shell.css,
 	gtk: gtk-*/gtk.css
 import.sh: copy with -i (if there is already a file asks to replace or not existing file)
+import.sh: option to apply themes automatically (edits related dconf variables)
 
 IN PROGRESS
 
 DID
+gnome settings:
+	accent colors (might need to check if gnome 47)
+	dark or light style
+	keyboard shortcuts
 copy parent themes (index.theme): copy recursively
 ~/.local/share/themes

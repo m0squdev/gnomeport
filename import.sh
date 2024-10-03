@@ -243,24 +243,32 @@ fi
 if [ $import_accent_color == true ];then
     echo "=== ACCENT COLOR ==="
     echo "dconf write: $*/accent-color.txt => /org/gnome/desktop/interface/accent-color"
-    while IFS= read -r accent_color; do
-        if [ -n "${accent_color[*]}" ]; then
-            dconf write /org/gnome/desktop/interface/accent-color "${accent_color[*]}"
-        else
-            echo "Warning: skipping dconf write of accent-color because an error occurred while reading source file content"
-        fi
-    done < "$*/accent-color.txt"
+    if [ -f "$*/accent-color.txt" ]; then
+        while IFS= read -r accent_color; do
+            if [ -n "${accent_color[*]}" ]; then
+                dconf write /org/gnome/desktop/interface/accent-color "${accent_color[*]}"
+            else
+                echo "Warning: skipping dconf write of accent-color because source file is empty"
+            fi
+        done < "$*/accent-color.txt"
+    else
+        echo "Warning: skipping dconf write of accent-color because source file doesn't exist"
+    fi
 fi
 
 # Color scheme
 if [ $import_color_scheme == true ];then
     echo "=== COLOR SCHEME ==="
     echo "dconf write: $*/color-scheme.txt => /org/gnome/desktop/interface/color-scheme"
-    while IFS= read -r color_scheme; do
-        if [ -n "${color_scheme[*]}" ]; then
-            dconf write /org/gnome/desktop/interface/color-scheme "${color_scheme[*]}"
-        else
-            echo "Warning: skipping dconf write of color-scheme because an error occurred while reading source file content"
-        fi
-    done < "$*/color-scheme.txt"
+    if [ -f "$*/color-scheme.txt" ]; then
+        while IFS= read -r color_scheme; do
+            if [ -n "${color_scheme[*]}" ]; then
+                dconf write /org/gnome/desktop/interface/color-scheme "${color_scheme[*]}"
+            else
+                echo "Warning: skipping dconf write of color-scheme because an source file is empty"
+            fi
+        done < "$*/color-scheme.txt"
+    else
+        echo "Warning: skipping dconf write of color-scheme because source file doesn't exist"
+    fi
 fi

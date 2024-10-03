@@ -1,8 +1,10 @@
-TO DO
-be careful to symlinks
+MAYBE IN A DISTANT FUTURE
 copy parent themes (css)
 	shell: gnome-shell/gnome-shell.css,
 	gtk: gtk-*/gtk.css
+
+TO DO
+be careful to symlinks
 import.sh: copy with -i (if there is already a file asks to replace or not existing file)
 import.sh: option to apply themes automatically (edits related dconf variables)
 

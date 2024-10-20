@@ -60,12 +60,3 @@ Additional flag for `import.sh`:
 
 - The scripts do not handle all possible GNOME configurations.
 - Some exported configurations may not work correctly when imported on a different system or GNOME version.
-
-## Contributing
-
-Contributions to improve these scripts or extend their functionality are welcome. Please submit issues or pull requests on the project's repository.
-
-## License
-
-[Insert your chosen license here]
-

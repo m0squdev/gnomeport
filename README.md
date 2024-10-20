@@ -1,59 +1,54 @@
-# GNOMEport
+# GNOME Theme Exporter/Importer
 
-GNOMEport is a set of bash scripts designed to export and import GNOME desktop environment themes and configurations. This tool allows you to easily backup and restore your GNOME customizations, including GTK themes, icon themes, cursor themes, sound themes, shell themes, wallpapers, and extension configurations.
+This project provides two bash scripts for exporting and importing GNOME theme configurations, including GTK themes, icon themes, cursor themes, sound themes, shell themes, extensions, wallpapers, keyboard shortcuts, accent colors, and color schemes.
 
 ## Scripts
 
-This repository contains two main scripts:
-
-1. `export.sh`: Exports your current GNOME theme and configurations.
-2. `import.sh`: Imports previously exported GNOME theme and configurations.
+1. `export.sh`: Exports the current GNOME theme configuration.
+2. `import.sh`: Imports a previously exported GNOME theme configuration.
 
 ## Usage
 
-### Exporting Themes
-
-To export your current GNOME themes and configurations:
+### Exporting
 
 ```bash
 ./export.sh [FLAGS] OUTPUT_DIRECTORY
 ```
 
-Flags:
-- `-a`: Export everything except disabled extensions
-- `-c`: Export current cursor theme files
-- `-d`: Export disabled extensions' files and dconf configurations
-- `-e`: Export enabled extensions' files and dconf configurations
-- `-g`: Export current GTK theme files
-- `-h`: View help
-- `-i`: Export current icon theme files (excluding cursor files)
-- `-s`: Export current sound theme files
-- `-S`: Export current shell theme files (requires user-theme extension)
-- `-v`: View program version
-- `-w`: Export current wallpapers and their dconf configuration
-
-To export everything, use: `./export.sh -ad OUTPUT_DIRECTORY`
-
-### Importing Themes
-
-To import previously exported GNOME themes and configurations:
+### Importing
 
 ```bash
 ./import.sh [FLAGS] INPUT_DIRECTORY
 ```
 
-Flags:
-- `-a`: Import everything
-- `-c`: Import cursor theme files
-- `-e`: Import extensions' files and dconf configurations
-- `-f`: Force overwrite existing theme directories
-- `-g`: Import GTK theme files
+## Flags
+
+Both scripts support the following flags:
+
+- `-a`: Export/import everything
+- `-A`: Export/import accent color (GNOME 47+)
+- `-c`: Export/import current cursor theme files
+- `-C`: Export/import color scheme
+- `-e`: Export/import extensions' files and dconf configurations
+- `-g`: Export/import current GTK theme files
 - `-h`: View help
-- `-i`: Import icon theme files (excluding cursor files)
-- `-s`: Import sound theme files
-- `-S`: Import shell theme files
+- `-i`: Export/import current icon theme files
+- `-k`: Export/import current keyboard shortcuts
+- `-s`: Export/import current sound theme files
+- `-S`: Export/import current shell theme files
 - `-v`: View program version
-- `-w`: Import wallpapers 
+- `-w`: Export/import current wallpapers
+
+Additional flag for `import.sh`:
+- `-f`: Force overwriting existing directories and extensions' dconf configurations
+
+## Notes
+
+- The export script will create directories and files in the specified output directory.
+- The import script will place files in the appropriate locations within the user's home directory.
+- Some operations require the "User Themes" GNOME extension to be installed and enabled.
+- Importing may overwrite existing configurations. Use with caution.
+- The accent color feature is only visible on GNOME 47+.
 
 ## Requirements
 
@@ -61,12 +56,16 @@ Flags:
 - Bash shell
 - `dconf` command-line tool
 
-## Notes
+## Limitations
 
-- When importing, use the `-f` flag to force overwrite existing theme directories and dconf configurations. Without this flag, the script will skip copying if a directory already exists or a dconf path is not empty.
-- The export script will attempt to find themes in both user and system directories.
-- The import script will place themes in the appropriate user directories. It will not automatically apply the themes and the extensions.
+- The scripts do not handle all possible GNOME configurations.
+- Some exported configurations may not work correctly when imported on a different system or GNOME version.
 
-## Disclaimer
+## Contributing
 
-Always backup your data before using these scripts. While they are designed to be safe, unexpected issues may occur.
+Contributions to improve these scripts or extend their functionality are welcome. Please submit issues or pull requests on the project's repository.
+
+## License
+
+[Insert your chosen license here]
+

@@ -46,7 +46,6 @@ Additional flag for `import.sh`:
 
 - The export script will create directories and files in the specified output directory.
 - The import script will place files in the appropriate locations within the user's home directory.
-- Some operations require the "User Themes" GNOME extension to be installed and enabled.
 - Importing may overwrite existing configurations. Use with caution.
 - The accent color feature is only visible on GNOME 47+.
 

@@ -34,7 +34,6 @@ FLAGS:
     -S    export current shell theme files. Only works with $user_theme_extension_id extension installed
     -v    view program version
     -w    export current wallpapers and their dconf configuration
-Shorthand: to export anything use the -ad flags.
 EOF
 )
 

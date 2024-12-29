@@ -51,8 +51,8 @@ Additional flag for `import.sh`:
 
 ## Requirements
 
+If you have GNOME installed you're good to go! To run these scripts you only need the following dependencies:
 - GNOME desktop environment
-- Bash shell
 - `dconf` command-line tool
 
 ## Limitations

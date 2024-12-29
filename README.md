@@ -1,4 +1,4 @@
-# GNOME Theme Exporter/Importer
+# GNOMEport
 
 This project provides two bash scripts for exporting and importing GNOME theme configurations, including GTK themes, icon themes, cursor themes, sound themes, shell themes, extensions, wallpapers, keyboard shortcuts, accent colors, and color schemes.
 

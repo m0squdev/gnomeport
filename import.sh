@@ -159,8 +159,8 @@ if [ $import_extensions == true ]; then
                     check_and_copy "$item_path" "$extensions_dir"
                 fi
             else
-                if [[ $item_basename == extensions.ini ]]; then
-                    dconf_path="/org/gnome/shell/extensions/"
+                if [[ $item_basename == *.ini ]]; then
+                    dconf_path="/org/gnome/shell/extensions/${item_basename::-4}/"
                     if [ $force_overwrite == false ] && [ "$(dconf dump "$dconf_path")" != "\n" ]; then
                         echo "dconf load: skipping $item_path => $dconf_path because directory is not empty"
                     else
@@ -168,8 +168,13 @@ if [ $import_extensions == true ]; then
                         dconf load "$dconf_path" < "$item_path"
                     fi
                 elif [[ $item_basename == *.gschema.xml ]]; then
-                    echo "cp: copying $item_path => $schemas_dir"
-                    cp "$item_path" "$schemas_dir"
+                    schema_destination="$schemas_dir/$item_basename"
+                    if [ $force_overwrite == false ] && [ -f "$schema_destination" ]; then
+                        echo "cp: skipping $item_path => $schema_destination because destination already exists"
+                    else
+                        echo "cp: copying $item_path => $schema_destination"
+                        cp "$item_path" "$schema_destination"
+                    fi
                 else
                     echo "Warning: skipping unexpected file $item_path"
                 fi

@@ -10,7 +10,7 @@ import.sh: option to apply themes automatically (edits related dconf variables)
 
 IN PROGRESS
 
-DID
+DONE
 gnome settings:
 	accent colors (might need to check if gnome 47)
 	dark or light style

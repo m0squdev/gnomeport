@@ -211,14 +211,13 @@ fi
 extensions_user_path="$HOME/.local/share/gnome-shell/extensions"
 extensions_path="/usr/share/gnome-shell/extensions"
 extensions_schemas_path="/usr/share/glib-2.0/schemas"
-extensions_list=""
 if [ $export_extensions == true ]; then
     echo "=== EXTENSIONS ==="
-    extensions_list+="$(gnome-extensions list)"
+    extensions_list="$(gnome-extensions list)"
     extensions_list+=$'\n'
     mkdir -p "$*/extensions"
     while IFS= read -r extension; do
-        if [ -n "${extension[*]}" ]; then  # Because there's normally a \n at the end of the file
+        if [ -n "${extension[*]}" ]; then  # Because there's normally a \n at the end of the string
             if [ -d "$extensions_user_path/${extension[*]}" ]; then
                 echo "cp: copying $extensions_user_path/${extension[*]} => $*/extensions/${extension[*]}"
                 cp -r "$extensions_user_path/${extension[*]}" "$*/extensions/${extension[*]}"
@@ -231,8 +230,16 @@ if [ $export_extensions == true ]; then
             fi
         fi
     done <<< "$extensions_list"
-    echo "dconf dump: dumping /org/gnome/shell/extensions/ => $*/extensions/extensions.ini"
-    dconf dump /org/gnome/shell/extensions/ > "$*/extensions/extensions.ini"
+    parent_dconf_dir="/org/gnome/shell/extensions/"
+    children_dconf_basenames="$(dconf list $parent_dconf_dir)"
+    while IFS= read -r child_dconf_basename; do
+        if [ -n "${child_dconf_basename[*]}" ]; then  # Because there's normally a \n at the end of the string
+            child_dconf_dir="$parent_dconf_dir$child_dconf_basename"
+            destination="$*/extensions/$(basename "${child_dconf_basename[*]}").ini"
+            echo "dconf dump: dumping ${child_dconf_dir[*]} => $destination"
+            dconf dump $child_dconf_dir > "$destination"
+        fi
+    done <<< "$children_dconf_basenames"
     echo "cp: copying $extensions_schemas_path/org.gnome.shell.extensions.*.gschema.xml => $*/extensions"
     cp "$extensions_schemas_path"/org.gnome.shell.extensions.*.gschema.xml "$*/extensions"
 fi
@@ -256,7 +263,7 @@ if [ $export_shell == true ]; then
     # The following lines are to copy the configuration of /org/gnome/shell/ without its subfolders
     # It works fine but it is useless so I didn't implement it in import.sh
     # shell_dump="$(echo "$(dconf dump /org/gnome/shell/)" | sed '/^$/q')"
-    # echo "$shell_dump" > "$shell_file"
+    # echo "$shell_dump" > "$shell_"
 fi
 
 # Wallpapers

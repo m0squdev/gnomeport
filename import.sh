@@ -27,7 +27,7 @@ FLAGS:
     -A    import accent color (the effect will be visible only on GNOME 47+)
     -c    import current cursor theme files
     -C    export color scheme
-    -e    import extensions' files and dconf configurations
+    -e    [EXPERIMENTAL] import extensions' files and dconf configurations
     -f    force overwriting existing directories and extensions' dconf configurations. If not specified and a directory already exists, the copying will be skipped. Doesn't apply to keyboard shortcuts because the dconf paths to edit aren't empty by default
     -g    import current GTK theme files
     -h    view help

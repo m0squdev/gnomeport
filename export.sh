@@ -25,7 +25,7 @@ FLAGS:
     -A    export accent color (GNOME 47+)
     -c    export current cursor theme files
     -C    export color scheme
-    -e    export extensions' files and dconf configurations
+    -e    [EXPERIMENTAL] export extensions' files and dconf configurations
     -g    export current GTK theme files
     -h    view help
     -i    export current icon theme files. This exports the whole theme, including eventual files related to the cursor

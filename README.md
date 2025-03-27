@@ -29,7 +29,7 @@ Both scripts support the following flags:
 - `-A`: Export/import accent color (GNOME 47+)
 - `-c`: Export/import current cursor theme files
 - `-C`: Export/import color scheme
-- `-e`: Export/import extensions' files and dconf configurations
+- `-e`: \[EXPERIMENTAL\] Export/import extensions' files and dconf configurations
 - `-g`: Export/import current GTK theme files
 - `-h`: View help
 - `-i`: Export/import current icon theme files
